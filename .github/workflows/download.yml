@@ -30,11 +30,11 @@ jobs:
           file_path="koishi/lflist.conf"
           output_dir="koishi"
           awk -v year="$year" -v output_dir="$output_dir" '
-          /^![0-9]{4}/{if (out) close(out); sub(/^!/, "", $1); filename=output_dir"/"$1".conf"; gsub(" ", "_", filename); out=filename; print "#[" $1 "]\n!" $1 > out}
+          /^!/{if (out) close(out); out=""; if ($1 ~ "^!" year) {filename=substr($1, 2) ".conf"; out=output_dir "/" filename; print "#[" substr($1, 2) "]\n" $0 > out; next}}
           out {print >> out}' $file_path
 
       - name: List files in koishi directory
         run: ls -l koishi
 
       - name: Display content of one file
-        run: cat koishi/2024.7.conf
+        run: cat koishi/2024.4\ TCG.conf
