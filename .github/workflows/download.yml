@@ -30,15 +30,8 @@ jobs:
           file_path="koishi/lflist.conf"
           output_dir="koishi"
           awk -v year="$year" -v output_dir="$output_dir" '
-          BEGIN {RS="!"; FS="\n"; ORS=""}
-          {
-            if ($1 ~ year) {
-              sub(/^[ \t]+|[ \t]+$/, "", $1)
-              file_name=output_dir"/"substr($1, 2)".conf"
-              print "#[" substr($1, 2) "]\n!" $0 > file_name
-            }
-          }
-          ' $file_path
+          /^!/{if (out) close(out); out=output_dir"/"substr($1, 2)".conf"; print "#[" substr($1, 2) "]\n!" $1 > out; next}
+          {print >> out}' $file_path
 
       - name: List files in koishi directory
         run: ls -l koishi
