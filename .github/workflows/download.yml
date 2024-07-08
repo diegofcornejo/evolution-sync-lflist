@@ -1,4 +1,4 @@
-name: mercury-lflist-sync
+name: mercury-lflist-download
 
 on:
   workflow_dispatch:
