@@ -46,7 +46,7 @@ jobs:
 
       - name: Download lflist.conf from YGOMobile
         run: |
-          curl -L https://raw.githubusercontent.com/fallenstardust/YGOMobile-cn-ko-en/master/mobile/assets/data/conf/lflist.conf -o koishi/lflist.conf
+          curl -L https://raw.githubusercontent.com/diegofcornejo/YGOMobile-cn-ko-en/master/mobile/assets/data/conf/lflist.conf -o koishi/lflist.conf
 
       - name: Split lflist.conf into multiple files
         run: |
