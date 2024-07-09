@@ -271,9 +271,11 @@ jobs:
           path: new/
 
       - name: Commit and push changes
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           # Configuration variables
-          REPO_URL="https://github.com/diegofcornejo/evolution-server-lflist.git"
+          REPO_URL="https://$GH_TOKEN@github.com/diegofcornejo/evolution-server-lflist.git"
           BRANCH="main"
           ORIGIN_REPO="diegofcornejo/YGOMobile-cn-ko-en"
           FILE_PATH="mobile/assets/data/conf/lflist.conf"
