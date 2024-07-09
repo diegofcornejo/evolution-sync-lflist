@@ -13,13 +13,13 @@ jobs:
       - uses: poll-github-repo/action@v1
         id: check
         with:
-          repo-to-sync: diegofcornejo/YGOMobile-cn-ko-en
+          repo-to-sync: fallenstardust/YGOMobile-cn-ko-en
           path-to-sync: mobile/assets/data/conf/lflist.conf
           cache-path: .sync/mercury-lflist-sync
           tracking-issue-label: upstream-mercury-lflist
           tracking-issue-title: "Update on {{ path }}: {{ sha-short }}"
           tracking-issue-body: |
-            New commit in diegofcornejo/YGOMobile-cn-ko-en:
+            New commit in fallenstardust/YGOMobile-cn-ko-en:
 
             **{{ message }}** [link]({{ url }})
           token: ${{ secrets.GH_TOKEN }}
@@ -46,7 +46,7 @@ jobs:
 
       - name: Download lflist.conf from YGOMobile
         run: |
-          curl -L https://raw.githubusercontent.com/diegofcornejo/YGOMobile-cn-ko-en/master/mobile/assets/data/conf/lflist.conf -o koishi/lflist.conf
+          curl -L https://raw.githubusercontent.com/fallenstardust/YGOMobile-cn-ko-en/master/mobile/assets/data/conf/lflist.conf -o koishi/lflist.conf
 
       - name: Split lflist.conf into multiple files
         run: |
@@ -60,8 +60,8 @@ jobs:
       - name: List files in koishi directory
         run: ls -l koishi
 
-      - name: Check content of banlists 2024.7
-        run: cat koishi/2024.7.KS.lflist.conf
+      # - name: Check content of banlists 2024.7
+      #   run: cat koishi/2024.7.KS.lflist.conf
 
       - name: Remove lflist.conf
         run: rm koishi/lflist.conf
@@ -250,8 +250,8 @@ jobs:
       - name: List files in new directory
         run: ls -l new
 
-      - name: Check content of new 2024.7
-        run: cat new/2024.7.KS.lflist.conf
+      # - name: Check content of new 2024.7
+      #   run: cat new/2024.7.KS.lflist.conf
 
       - name: Upload new artifacts
         uses: actions/upload-artifact@v4
@@ -275,13 +275,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           # Configuration variables
-          REPO_URL="https://$GH_TOKEN@github.com/diegofcornejo/evolution-server-lflist.git"
+          REPO_URL="https://$GH_TOKEN@github.com/termitaklk/lflist.git"
           BRANCH="main"
-          ORIGIN_REPO="diegofcornejo/YGOMobile-cn-ko-en"
+          ORIGIN_REPO="fallenstardust/YGOMobile-cn-ko-en"
           FILE_PATH="mobile/assets/data/conf/lflist.conf"
           COMMIT_MESSAGE="Update banlists with new KS lists"
 
-          # Get the SHA of the latest commit that modified the target file from the origin repository
+          # Get the SHA of the latest commit that modified the origin file from the origin repository
           LATEST_COMMIT_SHA=$(curl -s "https://api.github.com/repos/$ORIGIN_REPO/commits?path=$FILE_PATH&per_page=1" | jq -r '.[0].sha')
 
           # Check if the SHA was successfully retrieved
