@@ -60,6 +60,9 @@ jobs:
       - name: List files in koishi directory
         run: ls -l koishi
 
+      - name: Check content of banlists 2024.7
+        run: cat koishi/2024.7.KS.lflist.conf
+
       - name: Remove lflist.conf
         run: rm koishi/lflist.conf
 
@@ -246,6 +249,9 @@ jobs:
 
       - name: List files in new directory
         run: ls -l new
+
+      - name: Check content of new 2024.7
+        run: cat new/2024.7.KS.lflist.conf
 
       - name: Upload new artifacts
         uses: actions/upload-artifact@v4
