@@ -7,7 +7,7 @@ on:
 
 jobs:
   sync:
-    name: Check and Create Issue
+    name: Check for changes
     runs-on: ubuntu-latest
     outputs:
       newCommitsInSyncRepo: ${{ steps.check.outputs.newCommitsInSyncRepo }}
@@ -19,7 +19,6 @@ jobs:
           REPO_TO_SYNC="fallenstardust/YGOMobile-cn-ko-en"
           FILE_PATH="mobile/assets/data/conf/lflist.conf"
           CACHE_PATH=".sync/mercury-lflist-sync"
-          TRACKING_ISSUE_LABEL="upstream-mercury-lflist"
           TOKEN="${{ secrets.GH_TOKEN }}"
 
           # Create cache directory if it doesn't exist
@@ -31,25 +30,26 @@ jobs:
           # Read the last synchronization timestamp
           LAST_SYNC=$(cat "$CACHE_PATH")
 
-          # Fetch recent commits for the specified file since the last sync
+          # Fetch recent commits affecting the file since the last sync
           COMMITS=$(curl -s -H "Authorization: Bearer $TOKEN" \
             "https://api.github.com/repos/$REPO_TO_SYNC/commits?path=$FILE_PATH&since=$LAST_SYNC")
 
-          # Check if there are new commits
-          NEW_COMMITS=$(echo "$COMMITS" | jq -r '. | length')
+          # Debug the fetched commits
+          echo "Fetched commits:"
+          echo "$COMMITS" | jq
 
-          if [ "$NEW_COMMITS" -eq 0 ]; then
+          # Check if the array is empty
+          if [ "$(echo "$COMMITS" | jq -r '. | length')" -eq 0 ]; then
             echo "No new commits detected."
             echo "::set-output name=newCommitsInSyncRepo::false"
             exit 0
           fi
 
-          # If there are new commits, process the latest one
-          echo "New commits detected: $NEW_COMMITS"
+          # Extract details of the latest commit
           LAST_COMMIT=$(echo "$COMMITS" | jq '.[0]')
           LAST_MESSAGE=$(echo "$LAST_COMMIT" | jq -r '.commit.message')
           LAST_URL=$(echo "$LAST_COMMIT" | jq -r '.html_url')
-          LAST_SHA=$(echo "$LAST_COMMIT" | jq -r '.sha' | cut -c 1-7)  # Get the first 7 characters of the SHA
+          LAST_SHA=$(echo "$LAST_COMMIT" | jq -r '.sha' | cut -c 1-7)
           LAST_TIMESTAMP=$(echo "$LAST_COMMIT" | jq -r '.commit.author.date')
 
           # Format the issue title and body
@@ -63,17 +63,13 @@ jobs:
             -d '{
               "title": "'"$ISSUE_TITLE"'",
               "body": "'"$ISSUE_BODY"'",
-              "labels": ["'"$TRACKING_ISSUE_LABEL"'"]
+              "labels": ["upstream-mercury-lflist"]
             }' \
             https://api.github.com/repos/${{ github.repository }}/issues
 
-            # Update the cache with the latest timestamp
-            echo "$LAST_TIMESTAMP" > "$CACHE_PATH"
-            echo "::set-output name=newCommitsInSyncRepo::true"
-          else
-            echo "No new commits detected."
-            echo "::set-output name=newCommitsInSyncRepo::false"
-          fi
+          # Update the cache with the latest timestamp
+          echo "$LAST_TIMESTAMP" > "$CACHE_PATH"
+          echo "::set-output name=newCommitsInSyncRepo::true"
 
   download:
     name: Download LFLIST
