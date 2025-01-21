@@ -7,29 +7,69 @@ on:
 
 jobs:
   sync:
-    name: check-change
+    name: Check and Create Issue
     runs-on: ubuntu-latest
     outputs:
       newCommitsInSyncRepo: ${{ steps.check.outputs.newCommitsInSyncRepo }}
     steps:
-      - uses: poll-github-repo/action@v1
+      - name: Check for changes
         id: check
-        with:
-          repo-to-sync: fallenstardust/YGOMobile-cn-ko-en
-          path-to-sync: mobile/assets/data/conf/lflist.conf
-          cache-path: .sync/mercury-lflist-sync
-          tracking-issue-label: upstream-mercury-lflist
-          tracking-issue-title: "Update on {{ path }}: {{ sha-short }}"
-          tracking-issue-body: |
-            New commit in fallenstardust/YGOMobile-cn-ko-en:
+        run: |
+          # Configuration
+          REPO_TO_SYNC="fallenstardust/YGOMobile-cn-ko-en"
+          FILE_PATH="mobile/assets/data/conf/lflist.conf"
+          CACHE_PATH=".sync/mercury-lflist-sync"
+          TRACKING_ISSUE_LABEL="upstream-mercury-lflist"
+          TOKEN="${{ secrets.GH_TOKEN }}"
 
-            **{{ message }}** [link]({{ url }})
-          token: ${{ secrets.GH_TOKEN }}
-          yes-create-issues: true
+          # Create cache directory if it doesn't exist
+          mkdir -p $(dirname "$CACHE_PATH")
+          if [ ! -f "$CACHE_PATH" ]; then
+            echo "1970-01-01T00:00:00Z" > "$CACHE_PATH"
+          fi
 
-      - name: Log new commits
-        if: steps.check.outputs.newCommitsInSyncRepo == 'true'
-        run: echo "There are new commits in the sync repository."
+          # Read the last synchronization timestamp
+          LAST_SYNC=$(cat "$CACHE_PATH")
+
+          # Fetch recent commits for the specified file since the last sync
+          COMMITS=$(curl -s -H "Authorization: Bearer $TOKEN" \
+            "https://api.github.com/repos/$REPO_TO_SYNC/commits?path=$FILE_PATH&since=$LAST_SYNC")
+
+          # Check if there are new commits
+          NEW_COMMITS=$(echo "$COMMITS" | jq -r '. | length')
+
+          if [ "$NEW_COMMITS" -gt 0 ]; then
+            echo "New commits detected: $NEW_COMMITS"
+
+            # Extract the latest commit details
+            LAST_COMMIT=$(echo "$COMMITS" | jq '.[0]')
+            LAST_MESSAGE=$(echo "$LAST_COMMIT" | jq -r '.commit.message')
+            LAST_URL=$(echo "$LAST_COMMIT" | jq -r '.html_url')
+            LAST_SHA=$(echo "$LAST_COMMIT" | jq -r '.sha' | cut -c 1-7)  # Get the first 7 characters of the SHA
+            LAST_TIMESTAMP=$(echo "$LAST_COMMIT" | jq -r '.commit.author.date')
+
+            # Format the issue title and body
+            ISSUE_TITLE="Update on $FILE_PATH: $LAST_SHA"
+            ISSUE_BODY="New commit in $REPO_TO_SYNC:\n\n**${LAST_MESSAGE}** [link](${LAST_URL})"
+
+            # Create an issue in the current repository
+            curl -X POST \
+              -H "Authorization: Bearer $TOKEN" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "title": "'"$ISSUE_TITLE"'",
+                "body": "'"$ISSUE_BODY"'",
+                "labels": ["'"$TRACKING_ISSUE_LABEL"'"]
+              }' \
+              https://api.github.com/repos/${{ github.repository }}/issues
+
+            # Update the cache with the latest timestamp
+            echo "$LAST_TIMESTAMP" > "$CACHE_PATH"
+            echo "::set-output name=newCommitsInSyncRepo::true"
+          else
+            echo "No new commits detected."
+            echo "::set-output name=newCommitsInSyncRepo::false"
+          fi
 
   download:
     name: Download LFLIST
