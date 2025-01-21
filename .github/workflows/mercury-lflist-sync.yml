@@ -38,30 +38,34 @@ jobs:
           # Check if there are new commits
           NEW_COMMITS=$(echo "$COMMITS" | jq -r '. | length')
 
-          if [ "$NEW_COMMITS" -gt 0 ]; then
-            echo "New commits detected: $NEW_COMMITS"
+          if [ "$NEW_COMMITS" -eq 0 ]; then
+            echo "No new commits detected."
+            echo "::set-output name=newCommitsInSyncRepo::false"
+            exit 0
+          fi
 
-            # Extract the latest commit details
-            LAST_COMMIT=$(echo "$COMMITS" | jq '.[0]')
-            LAST_MESSAGE=$(echo "$LAST_COMMIT" | jq -r '.commit.message')
-            LAST_URL=$(echo "$LAST_COMMIT" | jq -r '.html_url')
-            LAST_SHA=$(echo "$LAST_COMMIT" | jq -r '.sha' | cut -c 1-7)  # Get the first 7 characters of the SHA
-            LAST_TIMESTAMP=$(echo "$LAST_COMMIT" | jq -r '.commit.author.date')
+          # If there are new commits, process the latest one
+          echo "New commits detected: $NEW_COMMITS"
+          LAST_COMMIT=$(echo "$COMMITS" | jq '.[0]')
+          LAST_MESSAGE=$(echo "$LAST_COMMIT" | jq -r '.commit.message')
+          LAST_URL=$(echo "$LAST_COMMIT" | jq -r '.html_url')
+          LAST_SHA=$(echo "$LAST_COMMIT" | jq -r '.sha' | cut -c 1-7)  # Get the first 7 characters of the SHA
+          LAST_TIMESTAMP=$(echo "$LAST_COMMIT" | jq -r '.commit.author.date')
 
-            # Format the issue title and body
-            ISSUE_TITLE="Update on $FILE_PATH: $LAST_SHA"
-            ISSUE_BODY="New commit in $REPO_TO_SYNC:\n\n**${LAST_MESSAGE}** [link](${LAST_URL})"
+          # Format the issue title and body
+          ISSUE_TITLE="Update on $FILE_PATH: $LAST_SHA"
+          ISSUE_BODY="New commit in $REPO_TO_SYNC:\n\n**${LAST_MESSAGE}** [link](${LAST_URL})"
 
-            # Create an issue in the current repository
-            curl -X POST \
-              -H "Authorization: Bearer $TOKEN" \
-              -H "Content-Type: application/json" \
-              -d '{
-                "title": "'"$ISSUE_TITLE"'",
-                "body": "'"$ISSUE_BODY"'",
-                "labels": ["'"$TRACKING_ISSUE_LABEL"'"]
-              }' \
-              https://api.github.com/repos/${{ github.repository }}/issues
+          # Create an issue in the current repository
+          curl -X POST \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "title": "'"$ISSUE_TITLE"'",
+              "body": "'"$ISSUE_BODY"'",
+              "labels": ["'"$TRACKING_ISSUE_LABEL"'"]
+            }' \
+            https://api.github.com/repos/${{ github.repository }}/issues
 
             # Update the cache with the latest timestamp
             echo "$LAST_TIMESTAMP" > "$CACHE_PATH"
