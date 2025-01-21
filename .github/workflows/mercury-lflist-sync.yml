@@ -57,8 +57,6 @@ jobs:
           CURRENT_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           echo "Updating cache with current timestamp: $CURRENT_TIMESTAMP"
           echo "$CURRENT_TIMESTAMP" > "$CACHE_PATH"
-          git config user.name "diegofcornejo"
-          git config user.email "diegof.cornejo@gmail.com"
           git add "$CACHE_PATH"
           git commit -m "sync: update $CACHE_PATH"
           git push
