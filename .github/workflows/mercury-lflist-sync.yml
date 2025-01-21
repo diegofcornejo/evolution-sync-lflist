@@ -12,10 +12,15 @@ jobs:
     outputs:
       newCommitsInSyncRepo: ${{ steps.check.outputs.newCommitsInSyncRepo }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Debug Working Directory
         run: |
-          pwd && ls -la
-          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+          echo "Current Working Directory:"
+          pwd
+          echo "Listing Contents:"
+          ls -la
       - name: Check for changes
         id: check
         run: |
