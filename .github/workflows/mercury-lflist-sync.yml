@@ -79,10 +79,10 @@ jobs:
 
           # Format the issue title and body
           ISSUE_TITLE="Update on $FILE_PATH: $LAST_SHA"
-          ISSUE_BODY=$(jq -n --arg msg "$LAST_MESSAGE" --arg url "$LAST_URL" --arg title "$ISSUE_TITLE" \
+          ISSUE_BODY=$(jq -n --arg msg "$LAST_MESSAGE" --arg url "$LAST_URL" --arg title "$ISSUE_TITLE"  --arg repo "$REPO_TO_SYNC" \
           '{
             "title": $title,
-            "body": "New commit in $REPO_TO_SYNC:\n\n**\($msg)** [link](\($url))",
+            "body": "New commit in \($repo):\n\n**\($msg)** [link](\($url))",
             "labels": ["upstream-mercury-lflist"]
           }')
 
