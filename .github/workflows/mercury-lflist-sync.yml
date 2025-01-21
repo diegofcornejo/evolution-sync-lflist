@@ -21,7 +21,7 @@ jobs:
           # Configuration
           REPO_TO_SYNC="fallenstardust/YGOMobile-cn-ko-en"
           FILE_PATH="mobile/assets/data/conf/lflist.conf"
-          CACHE_PATH="${GITHUB_WORKSPACE}/.sync/mercury-lflist-sync"
+          CACHE_PATH=".sync/mercury-lflist-sync"
           TOKEN="${{ secrets.GH_TOKEN }}"
 
           # Check if the cache file exists
@@ -38,6 +38,7 @@ jobs:
 
           # Read the last synchronization timestamp
           LAST_SYNC=$(cat "$CACHE_PATH")
+
           # Debug the last sync timestamp
           echo "Last sync timestamp: $LAST_SYNC"
           echo "https://api.github.com/repos/$REPO_TO_SYNC/commits?path=$FILE_PATH&since=$LAST_SYNC"
@@ -49,6 +50,14 @@ jobs:
           # Debug the fetched commits
           echo "Fetched commits:"
           echo "$COMMITS" | jq
+
+          # Update and commit the cache with the current timestamp
+          CURRENT_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "Updating cache with current timestamp: $CURRENT_TIMESTAMP"
+          echo "$CURRENT_TIMESTAMP" > "$CACHE_PATH"
+          git add "$CACHE_PATH"
+          git commit -m "sync: update $CACHE_PATH"
+          git push
 
           # Check if the array is empty
           if [ "$(echo "$COMMITS" | jq -r '. | length')" -eq 0 ]; then
