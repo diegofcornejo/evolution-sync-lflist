@@ -12,17 +12,16 @@ jobs:
     outputs:
       newCommitsInSyncRepo: ${{ steps.check.outputs.newCommitsInSyncRepo }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
 
       - name: Check for changes
+        uses: actions/checkout@v4
         id: check
         run: |
           # Configuration
           REPO_TO_SYNC="fallenstardust/YGOMobile-cn-ko-en"
           FILE_PATH="mobile/assets/data/conf/lflist.conf"
           CACHE_PATH=".sync/mercury-lflist-sync"
-          TOKEN="${{ secrets.GH_TOKEN }}"
+          TOKEN="${{ github.token }}"
 
           # Check if the cache file exists
           if [ -f "$CACHE_PATH" ]; then
@@ -44,7 +43,7 @@ jobs:
           echo "https://api.github.com/repos/$REPO_TO_SYNC/commits?path=$FILE_PATH&since=$LAST_SYNC"
 
           # Fetch recent commits affecting the file since the last sync
-          COMMITS=$(curl -s -H "Authorization: Bearer $TOKEN" \
+          COMMITS=$(curl -s \
             "https://api.github.com/repos/$REPO_TO_SYNC/commits?path=$FILE_PATH&since=$LAST_SYNC")
 
           # Debug the fetched commits
@@ -55,6 +54,8 @@ jobs:
           CURRENT_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           echo "Updating cache with current timestamp: $CURRENT_TIMESTAMP"
           echo "$CURRENT_TIMESTAMP" > "$CACHE_PATH"
+          git config user.name "diegofcornejo"
+          git config user.email "diegofcornejo@gmail.com"
           git add "$CACHE_PATH"
           git commit -m "sync: update $CACHE_PATH"
           git push
