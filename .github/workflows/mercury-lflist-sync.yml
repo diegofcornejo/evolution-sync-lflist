@@ -15,12 +15,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Debug Working Directory
-        run: |
-          echo "Current Working Directory:"
-          pwd
-          echo "Listing Contents:"
-          ls -la
       - name: Check for changes
         id: check
         run: |
@@ -48,13 +42,9 @@ jobs:
           echo "Last sync timestamp: $LAST_SYNC"
           echo "https://api.github.com/repos/$REPO_TO_SYNC/commits?path=$FILE_PATH&since=$LAST_SYNC"
 
-          exit 0
-
           # Fetch recent commits affecting the file since the last sync
           COMMITS=$(curl -s -H "Authorization: Bearer $TOKEN" \
             "https://api.github.com/repos/$REPO_TO_SYNC/commits?path=$FILE_PATH&since=$LAST_SYNC")
-
-          
 
           # Debug the fetched commits
           echo "Fetched commits:"
