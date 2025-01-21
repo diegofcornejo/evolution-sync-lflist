@@ -79,17 +79,18 @@ jobs:
 
           # Format the issue title and body
           ISSUE_TITLE="Update on $FILE_PATH: $LAST_SHA"
-          ISSUE_BODY="New commit in $REPO_TO_SYNC:\n\n**${LAST_MESSAGE}** [link](${LAST_URL})"
+          ISSUE_BODY=$(jq -n --arg msg "$LAST_MESSAGE" --arg url "$LAST_URL" --arg title "$ISSUE_TITLE" \
+          '{
+            "title": $title,
+            "body": "New commit in $REPO_TO_SYNC:\n\n**\($msg)** [link](\($url))",
+            "labels": ["upstream-mercury-lflist"]
+          }')
 
           # Create an issue in the current repository
           curl -X POST \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
-            -d '{
-              "title": "'"$ISSUE_TITLE"'",
-              "body": "'"$ISSUE_BODY"'",
-              "labels": ["upstream-mercury-lflist"]
-            }' \
+            -d "$ISSUE_BODY" \
             https://api.github.com/repos/${{ github.repository }}/issues
 
           # Set the output
