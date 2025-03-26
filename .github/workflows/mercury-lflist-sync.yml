@@ -146,6 +146,8 @@ jobs:
     name: Process LFLIST
     needs: download
     runs-on: ubuntu-latest
+    outputs:
+      hasNew: ${{ steps.check-new.outputs.hasNew }}
     steps:
       - name: Download koishi artifacts
         uses: actions/download-artifact@v4
@@ -314,10 +316,22 @@ jobs:
       - name: List files in new directory
         run: ls -l new
 
+      - name: Set output if new banlists exist
+        id: check-new
+        run: |
+          if [ "$(ls new/*.lflist.conf 2>/dev/null)" ]; then
+            echo "🟢 New files detected"
+            echo "hasNew=true" >> $GITHUB_OUTPUT
+          else
+            echo "🔴 No new files"
+            echo "hasNew=false" >> $GITHUB_OUTPUT
+          fi
+
       # - name: Check content of new 2024.7
       #   run: cat new/2024.7.KS.lflist.conf
 
       - name: Upload new artifacts
+        if: steps.check-new.outputs.hasNew == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: new-files
@@ -325,6 +339,7 @@ jobs:
 
   update:
     name: Update LFLIST
+    if: needs.process.outputs.hasNew == 'true'
     needs: process
     runs-on: ubuntu-latest
     steps:
